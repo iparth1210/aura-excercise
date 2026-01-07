@@ -1,0 +1,9 @@
+{
+  "name": "Copy of Aura Ultra | Elite Performance",
+  "description": "The ultimate Peak Human Operating System. Real-time kinetics, multimodal metabolic studio, search-grounded pro networking, and native neuro-coaching.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
