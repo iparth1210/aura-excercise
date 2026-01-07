@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, Play, Square, Activity, Target, Brain, Youtube, RefreshCw, Star, AlertTriangle, CheckCircle, List, Dumbbell, ChevronRight, X, Timer, Pause, SkipForward, Clock, Plus, Minus } from 'lucide-react';
 import { UserProfile, ExerciseStep } from '../types';
@@ -12,48 +13,6 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
   const [formFeedback, setFormFeedback] = useState<any>(null);
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // Routine Generation
-  const generateRoutine = (): ExerciseStep[] => {
-    const heritage = user?.origin || 'India';
-    const routine: ExerciseStep[] = [];
-    
-    if (heritage === 'India') {
-      routine.push({
-        name: "Surya Namaskar", 
-        sets: "5", 
-        reps: "Flow", 
-        tempo: "Breath",
-        instructions: ["Pranamasana (Prayer Pose)", "Hasta Uttanasana (Raised Arms)", "Padahastasana (Hand to Foot)"],
-        cue: "Nasal breathing only. Sync movement with breath.", 
-        videoUrl: "https://www.youtube.com/embed/fAAsBf17vI0"
-      });
-    }
-    
-    routine.push({
-      name: "Bilateral Goblet Squat", 
-      sets: "4", 
-      reps: "12", 
-      tempo: "3-1-1",
-      instructions: ["Hold weight close to chest", "Sit back into hips", "Drive knees out on ascent"],
-      cue: "Maintain neutral spine. Brace core.", 
-      videoUrl: "https://www.youtube.com/embed/MeIiIdhvXT4"
-    });
-
-    routine.push({
-      name: "Bulgarian Split Squat", 
-      sets: "3", 
-      reps: "10/side", 
-      tempo: "2-0-1",
-      instructions: ["Elevate rear foot", "Lower hips vertically", "Drive through front heel"],
-      cue: "Keep torso slightly forward for glute emphasis.", 
-      videoUrl: "https://www.youtube.com/embed/2C-uNgKwPLE"
-    });
-
-    return routine;
-  };
-
-  const dailyRoutine = generateRoutine();
-  
   // Set & Timer State
   const [currentSet, setCurrentSet] = useState(1);
   const [restTimeLeft, setRestTimeLeft] = useState(0);
@@ -67,12 +26,14 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [lastTimerStartValue, setLastTimerStartValue] = useState(60);
 
+  const dailyRoutine: ExerciseStep[] = user?.personalizedRoutine || [];
+
   // Per-exercise rest configuration state
   const [exerciseRestSettings, setExerciseRestSettings] = useState<Record<number, number>>(
     Object.fromEntries(dailyRoutine.map((_, i) => [i, 60]))
   );
 
-  const activeExercise = dailyRoutine[activeExerciseIdx];
+  const activeExercise = dailyRoutine[activeExerciseIdx] || { name: 'Initializing...', sets: '0', reps: '0', instructions: [], cue: '', videoUrl: '' };
   const totalSets = parseInt(activeExercise.sets) || 1;
 
   // Metabolic Rest Overlay Timer Logic
@@ -111,7 +72,7 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
   };
 
   const captureForFeedback = async () => {
-    if (!videoRef.current || !canvasRef.current || !user) return;
+    if (!videoRef.current || !canvasRef.current || !user || !activeExercise.name) return;
     setIsAnalyzing(true);
     const canvas = canvasRef.current;
     canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
@@ -142,9 +103,8 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
       setTotalRestDuration(configuredRest);
       setRestTimeLeft(configuredRest);
       setIsResting(true);
-      setIsTimerRunning(false); // Stop manual timer when auto rest starts
+      setIsTimerRunning(false); 
     } else {
-      // Exercise Finished
       const nextIdx = (activeExerciseIdx + 1) % dailyRoutine.length;
       handleSelectExercise(nextIdx);
     }
@@ -162,7 +122,6 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
     }));
   };
 
-  // Tactical Timer Handlers
   const toggleTacticalTimer = () => {
     if (!isTimerRunning && activeTimerRemaining === 0) {
       resetTacticalTimer();
@@ -228,7 +187,6 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* LEFT COLUMN: NAVIGATION & DETAILS */}
         <div className="lg:col-span-4 space-y-10">
           <div className="glass p-10 rounded-[4rem] border-slate-800 bg-slate-950/40 shadow-2xl">
             <h4 className="flex items-center gap-4 text-xs font-black text-slate-500 uppercase tracking-[0.5em] mb-10">
@@ -261,7 +219,7 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleSelectExercise(idx, true); }}
                     className={`p-4 rounded-2xl transition-all shadow-md group/yt ${
-                      activeExerciseIdx === idx && showTutorial ? 'bg-indigo-600 text-white shadow-indigo-500/20' : 'bg-slate-900 text-slate-500 hover:text-white hover:bg-slate-800'
+                      activeExerciseIdx === idx && showTutorial ? 'bg-indigo-600 text-white shadow-indigo-500/20' : 'bg-slate-900 text-slate-500 hover:text-white hover:bg-slate-700'
                     }`}
                     title="Watch Visual Protocol"
                   >
@@ -277,7 +235,7 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
               <Dumbbell size={120} className="text-indigo-400" />
             </div>
             <div className="flex justify-between items-start mb-8 relative z-10">
-              <div>
+              <div className="flex-1">
                 <h3 className="text-4xl font-black text-white tracking-tighter mb-2 uppercase leading-none">{activeExercise.name}</h3>
                 <p className="text-xs font-black text-indigo-400 uppercase tracking-[0.3em] mb-4">Protocol: {activeExercise.tempo} Execution</p>
                 <button 
@@ -288,12 +246,11 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
                   Watch Protocol Video
                 </button>
               </div>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 shrink-0">
                 <div className="bg-slate-950/80 px-6 py-4 rounded-[2rem] border border-indigo-500/20 text-center shadow-lg">
                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Set Tracker</p>
                    <p className="text-3xl font-black text-white">{currentSet}<span className="text-slate-600 text-lg">/{totalSets}</span></p>
                 </div>
-                {/* REST CONFIGURATION CONTROL */}
                 <div className="bg-slate-950/80 px-4 py-3 rounded-[1.5rem] border border-emerald-500/20 text-center shadow-lg">
                    <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Clock size={10} /> Rest Setting</p>
                    <div className="flex items-center justify-between gap-2">
@@ -305,7 +262,6 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
               </div>
             </div>
 
-            {/* TACTICAL TIMER UI */}
             <div className="mb-12 p-8 bg-slate-900/40 rounded-[3rem] border-2 border-slate-800 relative z-10 group/timer">
                <div className="flex items-center justify-between mb-6">
                   <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] flex items-center gap-3">
@@ -342,7 +298,6 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
                   </div>
                </div>
                
-               {/* Progress Bar for Manual Timer */}
                <div className="mt-6 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
                   <div 
                     className={`h-full bg-indigo-500 transition-all duration-1000 ${isTimerRunning ? 'opacity-100 shadow-[0_0_10px_#6366f1]' : 'opacity-40'}`} 
@@ -370,7 +325,6 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: VISION FEED & FEEDBACK */}
         <div className="lg:col-span-8 flex flex-col gap-10">
           {showTutorial && (
             <div className="glass rounded-[5rem] overflow-hidden aspect-video relative animate-in slide-in-from-top-12 duration-700 border-2 border-indigo-500/30 shadow-[0_40px_100px_rgba(0,0,0,0.8)] z-30">
@@ -388,7 +342,7 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
                <iframe 
                 width="100%" 
                 height="100%" 
-                src={`${activeExercise.videoUrl}?autoplay=1`} 
+                src={`${activeExercise.videoUrl.replace('watch?v=', 'embed/')}${activeExercise.videoUrl.includes('?') ? '&' : '?'}autoplay=1`} 
                 frameBorder="0" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowFullScreen 
@@ -457,7 +411,6 @@ const MovementLab: React.FC<{ user: UserProfile | null }> = ({ user }) => {
                    </div>
                 </div>
 
-                {/* Tracking HUD Controls */}
                 <div className="absolute bottom-16 left-0 right-0 px-16 z-20 flex gap-8">
                    <button 
                     onClick={captureForFeedback}

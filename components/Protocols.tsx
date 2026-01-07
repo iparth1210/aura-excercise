@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Download, 
@@ -73,8 +74,8 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
   ];
 
   useEffect(() => {
-    if (user && tasks.length === 0) {
-      setTasks(generateInitialTacticalPlan());
+    if (user?.personalizedProtocols) {
+      setTasks(user.personalizedProtocols);
     }
   }, [user]);
 
@@ -88,76 +89,6 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
     return () => clearInterval(interval);
   }, [isGenerating]);
 
-  const generateInitialTacticalPlan = (): TacticalTask[] => {
-    if (!user) return [];
-    
-    const isDesi = user.origin === 'India';
-    const goalType = user.targetPhysique;
-
-    return [
-      {
-        id: 'task-1',
-        time: '06:00',
-        title: isDesi ? 'Sattvic Awakening & Hydration' : 'Circadian Prime & Hydration',
-        objective: 'Neurological Reset',
-        category: 'mindset',
-        instructions: [
-          'Drink 500ml warm water with sea salt and lemon.',
-          isDesi ? 'Perform 5 rounds of Surya Namaskar facing East.' : '10 minutes of direct sunlight exposure.',
-          'Nasal breathing only (4-4-4-4 box breathing) for 5 minutes.'
-        ]
-      },
-      {
-        id: 'task-2',
-        time: '08:30',
-        title: 'Metabolic Breakfast Induction',
-        objective: 'Macro-Priming',
-        category: 'nutrition',
-        instructions: [
-          `Prepare ${goalType === 'shredded' ? 'High Protein / Minimal Carb' : 'Moderate Carb'} meal.`,
-          isDesi ? 'Moong Dal Chilla with Paneer or 4 Egg Whites with Spinach.' : 'Greek Yogurt with Whey and Chia Seeds.',
-          'Consume 200mg Caffeine (Black Coffee/Tea) if needed for focus.'
-        ]
-      },
-      {
-        id: 'task-3',
-        time: '12:00',
-        title: 'Kinetic Movement Block',
-        objective: `${goalType.replace('_', ' ').toUpperCase()} Intensity`,
-        category: 'movement',
-        instructions: [
-          '5 mins dynamic mobility warmup.',
-          goalType === 'shredded' ? 'High-volume supersets with 30s rest.' : 'Heavy compound lifts (4x8 reps) with 2m rest.',
-          'Focus on isometric holds at peak contraction for 2 seconds.'
-        ]
-      },
-      {
-        id: 'task-4',
-        time: '18:00',
-        title: 'Cognitive Recovery & Nutrition',
-        objective: 'Tissue Repair',
-        category: 'nutrition',
-        instructions: [
-          'Post-workout shake: 30g Protein + 5g Creatine.',
-          'Dinner: Lean protein source + high-volume fibrous greens.',
-          'Limit sodium intake to prevent evening water retention.'
-        ]
-      },
-      {
-        id: 'task-5',
-        time: '21:30',
-        title: 'Deep Sleep Architecture',
-        objective: 'Hormonal Optimization',
-        category: 'recovery',
-        instructions: [
-          'No digital screens for 45 minutes before bed.',
-          isDesi ? 'Ashwagandha + Magnesium warm water ritual.' : 'ZMA or Magnesium Glycinate supplement.',
-          'Perform a 2-minute gratitude scan to downregulate cortisol.'
-        ]
-      }
-    ];
-  };
-
   const toggleTask = (id: string) => {
     const next = new Set(completedTaskIds);
     if (next.has(id)) next.delete(id);
@@ -170,7 +101,7 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
   };
 
   const resetTimes = () => {
-    setTasks(generateInitialTacticalPlan());
+    if (user?.personalizedProtocols) setTasks(user.personalizedProtocols);
   };
 
   const initializeMission = async () => {
@@ -181,7 +112,7 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
     setIsGenerating(true);
     setMode('MORNING_BLUEPRINT');
     try {
-      const prompt = `A cinematic ultra-high-definition video of a professional athlete performing a ${user?.targetPhysique} ritual in ${user?.residence}. Dynamic camera work, focus on discipline and intensity.`;
+      const prompt = `A cinematic ultra-high-definition video of a professional athlete performing a ${user?.targetPhysique} ritual in ${user?.residence}. Focus on heritage ${user?.origin}. Dynamic camera work, discipline and intensity.`;
       const operation = await generateRitualVideo(prompt);
       
       let pollOp = operation;
@@ -225,8 +156,8 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
             <ShieldCheck size={14} className="text-indigo-400" />
             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Tactical OS v4.0</span>
           </div>
-          <h2 className="text-8xl font-black tracking-tighter mb-6 leading-none">Pro <span className="text-indigo-500 italic">Blueprint</span></h2>
-          <p className="text-slate-400 text-2xl font-medium">Generate your interactive mission report. Grounded in your biological heritage and geographic environment.</p>
+          <h2 className="text-8xl font-black tracking-tighter mb-6 leading-none text-white">Pro <span className="text-indigo-500 italic">Blueprint</span></h2>
+          <p className="text-slate-400 text-2xl font-medium">Generate your interactive mission report. Grounded in your <span className="text-indigo-400 font-bold">{user?.origin}</span> heritage and <span className="text-indigo-400 font-bold">{user?.residence}</span> environment.</p>
         </div>
 
         <div className="max-w-4xl mx-auto">
@@ -239,7 +170,7 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
               <Zap size={56} fill="white" />
             </div>
             <div>
-              <h3 className="text-5xl font-black tracking-tighter mb-4">Initialize Tactical Briefing</h3>
+              <h3 className="text-5xl font-black tracking-tighter mb-4 text-white">Initialize Tactical Briefing</h3>
               <p className="text-slate-500 text-xl">Synthesize your personal <span className="text-indigo-400 font-bold uppercase">{user?.targetTimeline}</span> transformation protocol.</p>
             </div>
           </button>
@@ -277,7 +208,7 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
                 <Timer size={12} /> Live Strategy Mode
              </span>
           </div>
-          <h2 className="text-7xl font-black tracking-tighter mb-3 leading-none">Daily Mission <span className="text-indigo-500 italic">Log</span></h2>
+          <h2 className="text-7xl font-black tracking-tighter mb-3 leading-none text-white">Daily Mission <span className="text-indigo-500 italic">Log</span></h2>
           <p className="text-slate-400 text-2xl font-medium">Identity: {user?.name} // Sequence: {user?.targetPhysique.toUpperCase().replace('_', ' ')}</p>
         </div>
         
@@ -373,15 +304,14 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
         </div>
       </div>
 
-      {/* HEADER FOR PRINT REPORT */}
       <div className="hidden print:block mb-12 border-b-4 border-black pb-8">
         <div className="flex justify-between items-end">
           <div>
-             <h1 className="text-6xl font-black tracking-tighter uppercase leading-none mb-2">AURA ULTRA</h1>
-             <p className="text-xs font-mono font-black uppercase tracking-[0.4em]">Tactical Protocol Report // {new Date().toLocaleDateString()}</p>
+             <h1 className="text-6xl font-black tracking-tighter uppercase leading-none mb-2 text-black">AURA ULTRA</h1>
+             <p className="text-xs font-mono font-black uppercase tracking-[0.4em] text-black">Tactical Protocol Report // {new Date().toLocaleDateString()}</p>
           </div>
           {exportConfig.showIdentity && (
-            <div className="text-right">
+            <div className="text-right text-black">
                <p className="text-xs font-black uppercase tracking-widest mb-1">DESIGNATION: {user?.name}</p>
                <p className="text-xs font-black uppercase tracking-widest mb-1">SEQUENCE: {user?.targetPhysique}</p>
                <p className="text-xs font-black uppercase tracking-widest">ORIGIN: {user?.origin}</p>
@@ -392,7 +322,6 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-7 space-y-12">
-          {/* VIDEO FEED - HIDDEN FROM PRINT */}
           <div className="glass p-12 rounded-[4.5rem] bg-indigo-500/5 border-indigo-500/10 no-print shadow-2xl">
              <div className="flex items-center justify-between mb-8">
                 <h4 className="flex items-center gap-4 text-2xl font-black tracking-tighter uppercase text-indigo-400">
@@ -415,7 +344,7 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
           </div>
           
           <div className="space-y-8">
-            <h4 className="text-4xl font-black mb-8 flex items-center gap-5 uppercase tracking-tighter leading-none print:text-2xl print:mb-4">
+            <h4 className="text-4xl font-black mb-8 flex items-center gap-5 uppercase tracking-tighter leading-none print:text-2xl print:mb-4 text-white print:text-black">
               <ListChecks className="text-indigo-400 no-print" size={32} /> Tactical Workflow
             </h4>
             <div className="space-y-6 print:space-y-4">
@@ -505,7 +434,7 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
               
               {exportConfig.includeNotesField && (
                 <div className="hidden print:block p-10 border-2 border-black rounded-2xl min-h-[150px]">
-                   <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-4">TACTICAL FIELD NOTES</p>
+                   <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-4 text-black">TACTICAL FIELD NOTES</p>
                    <div className="border-b border-black/10 h-8 mb-4" />
                    <div className="border-b border-black/10 h-8 mb-4" />
                    <div className="border-b border-black/10 h-8" />
@@ -517,10 +446,10 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
 
         <div className="lg:col-span-5 space-y-12 print:space-y-8">
            <div className={`glass p-12 rounded-[5rem] border-2 border-indigo-500/20 bg-indigo-500/5 relative overflow-hidden shadow-2xl print:rounded-2xl print:p-8 print:border-black ${exportConfig.target ? '' : 'print:hidden'}`}>
-              <h4 className="flex items-center gap-4 text-2xl font-black mb-10 tracking-tighter uppercase text-indigo-400 print:text-lg print:mb-6">
+              <h4 className="flex items-center gap-4 text-2xl font-black mb-10 tracking-tighter uppercase text-indigo-400 print:text-lg print:mb-6 print:text-black">
                 <Target size={24} className="no-print" /> Objective Vision
               </h4>
-              <div className="aspect-square rounded-[4rem] overflow-hidden border-2 border-slate-800 shadow-[0_40px_80px_rgba(0,0,0,0.6)] relative mb-10 group print:rounded-2xl print:mb-6">
+              <div className="aspect-square rounded-[4rem] overflow-hidden border-2 border-slate-800 shadow-[0_40px_80px_rgba(0,0,0,0.6)] relative mb-10 group print:rounded-2xl print:mb-6 print:border-black">
                  {user?.physiqueVisualUrl ? (
                    <img src={user.physiqueVisualUrl} alt="Target Physique" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms] ease-out" />
                  ) : (
@@ -546,7 +475,7 @@ const Protocols: React.FC<{ user: UserProfile | null }> = ({ user }) => {
            </div>
 
            <div className={`glass p-12 rounded-[5rem] bg-emerald-500/5 border-emerald-500/20 shadow-2xl print:rounded-2xl print:p-8 print:border-black ${exportConfig.readiness && exportConfig.showBioMarkers ? '' : 'print:hidden'}`}>
-              <h4 className="flex items-center gap-4 font-black text-2xl mb-10 tracking-tighter uppercase text-emerald-400 print:text-lg print:mb-6">
+              <h4 className="flex items-center gap-4 font-black text-2xl mb-10 tracking-tighter uppercase text-emerald-400 print:text-lg print:mb-6 print:text-black">
                 <Activity size={24} className="no-print" /> Readiness Matrix
               </h4>
               <div className="space-y-6 print:space-y-3">

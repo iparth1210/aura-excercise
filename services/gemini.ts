@@ -30,6 +30,48 @@ export const generatePhysiqueVisual = async (physiqueType: string) => {
   return null;
 };
 
+export const generateGlobalBlueprint = async (user: any) => {
+  const ai = getAI();
+  const prompt = `Generate a world-class elite performance blueprint for a user with the following profile:
+  Name: ${user.name}
+  Heritage (Biological/Cultural): ${user.origin}
+  Current Residence (Environment): ${user.residence}
+  Target: ${user.targetPhysique} in ${user.targetTimeline}
+  Goals: ${user.primaryGoals.join(', ')}
+  Diet: ${user.dietaryPreferences.join(', ')}
+  Experience: ${user.experienceLevel}
+
+  Instructions:
+  1. Consider specific metabolic predispositions and traditional strengths of their ${user.origin} heritage.
+  2. Account for the environment (climate, altitude, food availability) in ${user.residence}.
+  3. Create 3 JSON arrays: 
+     - "protocols": 5 daily time-blocked tasks (id, time, title, objective, instructions[], category).
+     - "routine": 3 key exercises for today (name, sets, reps, tempo, instructions[], cue, videoUrl).
+     - "meals": 2 optimized meals (meal, menu, objective, ingredients[], preparationSteps[], videoUrl).
+  
+  Make it truly professional and grounded in elite science.
+  Return ONLY the JSON.`;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          protocols: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, time: { type: Type.STRING }, title: { type: Type.STRING }, objective: { type: Type.STRING }, instructions: { type: Type.ARRAY, items: { type: Type.STRING } }, category: { type: Type.STRING } } } },
+          routine: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, sets: { type: Type.STRING }, reps: { type: Type.STRING }, tempo: { type: Type.STRING }, instructions: { type: Type.ARRAY, items: { type: Type.STRING } }, cue: { type: Type.STRING }, videoUrl: { type: Type.STRING } } } },
+          meals: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { meal: { type: Type.STRING }, menu: { type: Type.STRING }, objective: { type: Type.STRING }, ingredients: { type: Type.ARRAY, items: { type: Type.STRING } }, preparationSteps: { type: Type.ARRAY, items: { type: Type.STRING } }, videoUrl: { type: Type.STRING } } } }
+        },
+        required: ["protocols", "routine", "meals"]
+      }
+    }
+  });
+
+  return JSON.parse(response.text || '{}');
+};
+
 export const analyzePerformance = async (user: any, latLng?: { latitude: number; longitude: number }) => {
   const ai = getAI();
   const prompt = `Perform a deep optimization analysis for ${user.name}, an ${user.origin} athlete living in ${user.residence}. 

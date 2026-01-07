@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { ChevronRight, ArrowRight, Zap, ShieldCheck, Sparkles, Brain, Dumbbell, Utensils, Target, Moon, Activity, Layout, Trophy, Sun, Check, MapPin, Globe, Home, Clock, ImageIcon, RefreshCw } from 'lucide-react';
+import { ChevronRight, ArrowRight, Zap, ShieldCheck, Sparkles, Brain, Dumbbell, Utensils, Target, Moon, Activity, Layout, Trophy, Sun, Check, MapPin, Globe, Home, Clock, ImageIcon, RefreshCw, Search } from 'lucide-react';
 import { UserProfile, PhysiqueType } from '../types';
-import { generatePhysiqueVisual } from '../services/gemini';
+import { generatePhysiqueVisual, generateGlobalBlueprint } from '../services/gemini';
 
 interface OnboardingProps {
   onComplete: (profile: UserProfile) => void;
@@ -10,7 +10,8 @@ interface OnboardingProps {
 
 const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const [step, setStep] = useState(0);
-  const [isGeneratingVisual, setIsGeneratingVisual] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingText, setLoadingText] = useState('Initializing...');
   const [profile, setProfile] = useState<Partial<UserProfile>>({
     name: '',
     age: 28,
@@ -22,8 +23,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     sleepHabit: 'early_bird',
     stressLevel: 'moderate',
     equipmentAccess: [],
-    origin: 'India',
-    residence: 'USA',
+    origin: '',
+    residence: '',
     targetPhysique: 'athletic_lean',
     targetTimeline: '12 Weeks',
     completedOnboarding: true
@@ -40,16 +41,28 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   };
 
   const generateAndDeploy = async () => {
-    setIsGeneratingVisual(true);
+    setIsGenerating(true);
+    setLoadingText('Synthesizing Physique Visualization...');
     try {
       const visualUrl = await generatePhysiqueVisual(profile.targetPhysique || 'athletic_lean');
-      const finalProfile = { ...profile, physiqueVisualUrl: visualUrl || undefined } as UserProfile;
+      
+      setLoadingText('Grounding Biological Heritage & Global Context...');
+      const blueprint = await generateGlobalBlueprint(profile);
+      
+      const finalProfile = { 
+        ...profile, 
+        physiqueVisualUrl: visualUrl || undefined,
+        personalizedProtocols: blueprint.protocols,
+        personalizedRoutine: blueprint.routine,
+        personalizedMeals: blueprint.meals
+      } as UserProfile;
+      
       onComplete(finalProfile);
     } catch (e) {
       console.error(e);
       onComplete(profile as UserProfile);
     } finally {
-      setIsGeneratingVisual(false);
+      setIsGenerating(false);
     }
   };
 
@@ -94,36 +107,28 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     },
     {
       title: "Geographic Fusion",
-      desc: "Define your Heritage and current Environment.",
+      desc: "Input your heritage and current residence for global grounding.",
       component: (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-2"><Globe size={12}/> Origin / Heritage</label>
-            <div className="grid grid-cols-2 gap-3">
-              {['India', 'Europe', 'East Asia', 'Middle East', 'USA', 'Other'].map(opt => (
-                <button 
-                  key={opt}
-                  onClick={() => setProfile({...profile, origin: opt})}
-                  className={`p-4 rounded-2xl border-2 transition-all font-bold text-sm ${profile.origin === opt ? 'bg-orange-500/10 border-orange-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-2"><Globe size={12}/> Origin / Biological Heritage</label>
+            <input 
+              type="text" 
+              placeholder="e.g. West African, South Indian, Nordic..." 
+              className="w-full bg-slate-900 border-2 border-slate-800 rounded-2xl p-4 text-xl font-bold text-white focus:border-orange-500 outline-none transition-all"
+              value={profile.origin}
+              onChange={(e) => setProfile({...profile, origin: e.target.value})}
+            />
           </div>
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-2"><Home size={12}/> Current Residence</label>
-            <div className="grid grid-cols-2 gap-3">
-              {['USA', 'Canada', 'Europe', 'India', 'Middle East', 'Australia'].map(opt => (
-                <button 
-                  key={opt}
-                  onClick={() => setProfile({...profile, residence: opt})}
-                  className={`p-4 rounded-2xl border-2 transition-all font-bold text-sm ${profile.residence === opt ? 'bg-sky-500/10 border-sky-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex items-center gap-2"><MapPin size={12}/> Current Residence (City/Country)</label>
+            <input 
+              type="text" 
+              placeholder="e.g. London, UK / New York, USA..." 
+              className="w-full bg-slate-900 border-2 border-slate-800 rounded-2xl p-4 text-xl font-bold text-white focus:border-sky-500 outline-none transition-all"
+              value={profile.residence}
+              onChange={(e) => setProfile({...profile, residence: e.target.value})}
+            />
           </div>
         </div>
       )
@@ -204,7 +209,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {[
             { id: 'omnivore', label: 'Standard/Omnivore', icon: Utensils },
-            { id: 'vegetarian', label: 'Indian Vegetarian', icon: Sparkles },
+            { id: 'vegetarian', label: 'Vegetarian', icon: Sparkles },
             { id: 'vegan', label: 'Plant Based', icon: Sun },
             { id: 'keto', label: 'Ketogenic', icon: Zap },
             { id: 'paleo', label: 'Paleo/Primal', icon: ShieldCheck },
@@ -302,7 +307,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     }
   };
 
-  if (isGeneratingVisual) {
+  if (isGenerating) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 relative overflow-hidden">
         <div className="absolute inset-0 mesh-gradient opacity-30" />
@@ -311,17 +316,17 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
            <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
            <div className="absolute inset-0 flex items-center justify-center"><RefreshCw className="text-indigo-400 animate-pulse" size={48} /></div>
         </div>
-        <h3 className="text-4xl font-black mb-4 tracking-tighter text-white">Generating Visual Blueprint...</h3>
-        <p className="text-slate-500 text-lg font-mono tracking-[0.3em] uppercase opacity-50">PRO_PHYSIQUE_RENDERING_NODE</p>
+        <h3 className="text-4xl font-black mb-4 tracking-tighter text-white">{loadingText}</h3>
+        <p className="text-slate-500 text-lg font-mono tracking-[0.3em] uppercase opacity-50">PRO_ELITE_SYNTHESIS_LOOP</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 relative overflow-hidden text-center">
       <div className="absolute inset-0 mesh-gradient opacity-30" />
       
-      <div className="max-w-2xl w-full glass p-12 md:p-16 rounded-[4rem] relative z-10 border-2 border-indigo-500/20 shadow-[0_0_100px_rgba(99,102,241,0.1)]">
+      <div className="max-w-2xl w-full glass p-12 md:p-16 rounded-[4rem] relative z-10 border-2 border-indigo-500/20 shadow-[0_0_100px_rgba(99,102,241,0.1)] text-left">
         <div className="flex items-center gap-4 mb-12">
           <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/30">
             <Zap size={24} fill="currentColor" />
@@ -357,7 +362,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
           )}
           <button 
             onClick={next}
-            disabled={step === 0 && !profile.name}
+            disabled={(step === 0 && !profile.name) || (step === 1 && (!profile.origin || !profile.residence))}
             className="flex-1 py-6 bg-white text-slate-950 rounded-[2rem] font-black text-xl flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-2xl disabled:opacity-20 disabled:grayscale"
           >
             {step === steps.length - 1 ? 'Deploy Identity' : 'Advance'} 

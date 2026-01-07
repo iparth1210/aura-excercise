@@ -13,41 +13,7 @@ const NutritionStudio: React.FC<{ user: UserProfile | null }> = ({ user }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const generateMealBlueprint = (): MealStep[] => {
-    const heritage = user?.origin || 'India';
-    if (heritage === 'India') {
-      return [
-        {
-          meal: "Morning Metabolic Start",
-          menu: "Sprouted Moong & Paneer Salad",
-          objective: "High-Protein / High-Fiber Induction",
-          ingredients: ["1 Cup Sprouted Moong Dal", "100g Fresh Paneer", "Cucumber", "Lemon & Spices"],
-          preparationSteps: ["Steam moong", "Toss paneer", "Mix veggies", "Season"],
-          videoUrl: "https://www.youtube.com/embed/5U2z03F6Ie8"
-        },
-        {
-          meal: "Desi-Fusion Lunch",
-          menu: "Quinoa Veggie Khichdi with Curd",
-          objective: "Sustained Glycogen Flow",
-          ingredients: ["Quinoa", "Moong Dal", "Veggies", "Ghee", "Spices"],
-          preparationSteps: ["Pressure cook grains", "Temper with spices", "Serve with Curd"],
-          videoUrl: "https://www.youtube.com/embed/69nUfA8o56E"
-        }
-      ];
-    }
-    return [
-      {
-        meal: "Standard Induction",
-        menu: "Oatmeal with Whey",
-        objective: "Glycogen Prime",
-        ingredients: ["Oats", "Whey Protein", "Berries"],
-        preparationSteps: ["Cook oats", "Stir protein", "Top berries"],
-        videoUrl: "https://www.youtube.com/embed/69nUfA8o56E"
-      }
-    ];
-  };
-
-  const mealBlueprint = generateMealBlueprint();
+  const mealBlueprint: MealStep[] = user?.personalizedMeals || [];
 
   const startCamera = async () => {
     setIsCapturing(true);
@@ -105,7 +71,6 @@ const NutritionStudio: React.FC<{ user: UserProfile | null }> = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* LEFT COLUMN: MEAL BLUEPRINT */}
         <div className="lg:col-span-6 space-y-8">
            <h4 className="flex items-center gap-4 text-xs font-black mb-6 tracking-[0.4em] uppercase text-slate-500">
              <Calendar className="text-emerald-400" size={16} /> Culinary Protocols
@@ -128,7 +93,6 @@ const NutritionStudio: React.FC<{ user: UserProfile | null }> = ({ user }) => {
                          </div>
                       </div>
                       <div className="flex items-center gap-6">
-                         {/* HEADER TUTORIAL BUTTON */}
                          <button 
                            onClick={(e) => toggleTutorial(i, e)}
                            className={`p-4 rounded-2xl transition-all group/yt shadow-lg ${activeTutorialIdx === i ? 'bg-rose-600 text-white' : 'bg-slate-900 text-slate-500 hover:text-white hover:bg-slate-800'}`}
@@ -142,7 +106,6 @@ const NutritionStudio: React.FC<{ user: UserProfile | null }> = ({ user }) => {
 
                    {expandedMealIdx === i && (
                      <div className="px-10 pb-10 space-y-10 animate-in slide-in-from-top-6 duration-700">
-                        {/* VIDEO PLAYER SECTION */}
                         {activeTutorialIdx === i && (
                           <div className="aspect-video glass rounded-[3rem] overflow-hidden border-2 border-emerald-500/40 shadow-2xl relative animate-in zoom-in-95 duration-500">
                              <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
@@ -154,7 +117,7 @@ const NutritionStudio: React.FC<{ user: UserProfile | null }> = ({ user }) => {
                              <iframe 
                                width="100%" 
                                height="100%" 
-                               src={`${meal.videoUrl}?autoplay=1`} 
+                               src={`${meal.videoUrl.replace('watch?v=', 'embed/')}${meal.videoUrl.includes('?') ? '&' : '?'}autoplay=1`} 
                                title="Meal Tutorial" 
                                frameBorder="0" 
                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
@@ -210,7 +173,6 @@ const NutritionStudio: React.FC<{ user: UserProfile | null }> = ({ user }) => {
            </div>
         </div>
 
-        {/* RIGHT COLUMN: MEAL ANALYZER */}
         <div className="lg:col-span-6">
           <div className="glass rounded-[5rem] overflow-hidden relative aspect-square shadow-[0_40px_100px_rgba(0,0,0,0.8)] bg-slate-950 border-2 border-slate-800 group/vision">
             {isAnalyzing && (

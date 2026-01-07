@@ -25,12 +25,16 @@ export interface UserProfile {
   sleepHabit: 'early_bird' | 'night_owl' | 'irregular';
   stressLevel: 'low' | 'moderate' | 'high';
   equipmentAccess: string[];
-  origin: string; // Heritage
-  residence: string; // Current environment
+  origin: string; // Heritage (Country/Region)
+  residence: string; // Current City/Country
   targetPhysique: PhysiqueType;
   targetTimeline: string;
   physiqueVisualUrl?: string;
   completedOnboarding: boolean;
+  // AI Generated Global Blueprints
+  personalizedProtocols?: any[];
+  personalizedRoutine?: any[];
+  personalizedMeals?: any[];
 }
 
 export interface ExerciseStep {
